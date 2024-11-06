@@ -1,0 +1,59 @@
+create table stud_marks (name varchar(50), total_marks int);
+ 
+INSERT INTO stud_marks (name, total_marks) VALUES ('Akash Gupta', 1000);
+INSERT INTO stud_marks (name, total_marks) VALUES ('Samay Raina', 970);
+INSERT INTO stud_marks (name, total_marks) VALUES ('Madhur Virli', 880);
+INSERT INTO stud_marks (name, total_marks) VALUES ('Maheep Singh', 820);
+INSERT INTO stud_marks (name, total_marks) VALUES ('Abhishek Upamanyu', 1100);
+
+select * from stud_marks;
+
+create table Result(roll int primary key auto_increment, name varchar(50), class varchar(20));
+
+
+DELIMITER //
+create function proc_grade(s_name varchar(50), s_totalmarks int)
+     returns varchar(20)
+     reads sql data
+     begin
+     declare sclass varchar(20);
+     declare m int;
+     if s_totalmarks between 990 and 1500 then
+     set sclass = "Distinction";
+     elseif s_totalmarks between 900 and 989 then
+     set sclass = "First Class";
+     elseif s_totalmarks between 825 and 899 then
+     set sclass = "Higher Second Class";
+     else
+     set sclass = "No class";
+     end if;
+     return sclass;
+     end//
+     
+delimiter //
+ create procedure categorize_students()
+     begin
+     declare finish int default 0; 
+     declare s_name varchar(50);
+     declare s_marks int;
+     declare sclass varchar(20);
+     declare cur cursor for select name, total_marks from stud_marks;
+     declare continue handler for not found set finish = 1;
+     open cur;
+     read_loop: loop
+     fetch cur into s_name, s_marks;
+     if finish = 1 then
+     leave read_loop;
+     end if;
+     set sclass = proc_Grade(s_name, s_marks);
+     insert into Result(name, class) values (s_name, sclass);
+     end loop;
+     close cur;
+     end//
+     
+ DELIMITER ;
+ 
+ CALL categorize_students();
+ 
+ select * from Result;
+

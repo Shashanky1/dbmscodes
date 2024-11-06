@@ -1,0 +1,176 @@
+use libraryDB
+
+db.createCollection("Authors");
+
+ db.Authors.insertMany([
+...   {
+...     name: "J.R.R. Tolkien",
+...     nationality: "British",
+...     birthYear: 1892,
+...     booksWritten: ["The Hobbit", "The Lord of the Rings"]
+...   },
+...   {
+...     name: "George Orwell",
+...     nationality: "British",
+...     birthYear: 1903,
+...     booksWritten: ["1984", "Animal Farm"]
+...   },
+...   {
+...     name: "Harper Lee",
+...     nationality: "American",
+...     birthYear: 1926,
+...     booksWritten: ["To Kill a Mockingbird"]
+...   },
+...   {
+...     name: "J.K. Rowling",
+...     nationality: "British",
+...     birthYear: 1965,
+...     booksWritten: ["Harry Potter and the Sorcerer's Stone", "Harry Potter and the Chamber of Secrets"]
+...   },
+...   {
+...     name: "F. Scott Fitzgerald",
+...     nationality: "American",
+...     birthYear: 1896,
+...     booksWritten: ["The Great Gatsby"]
+...   }
+... ])
+
+db.createCollection("Books");
+
+ db.Books.insertMany([
+...   {
+...     title: "The Hobbit",
+...     author: "J.R.R. Tolkien",
+...     genre: "Fantasy",
+...     publishedYear: 1937,
+...     chapters: ["An Unexpected Party", "Roast Mutton", "A Short Rest"],
+...     publisher: "George Allen & Unwin"
+...   },
+...   {
+...     title: "1984",
+...     author: "George Orwell",
+...     genre: "Dystopian",
+...     publishedYear: 1949,
+...     chapters: ["The Principles of Newspeak", "The Ministry of Truth", "Freedom is Slavery"],
+...     publisher: "Secker & Warburg"
+...   },
+...   {
+...     title: "To Kill a Mockingbird",
+...     author: "Harper Lee",
+...     genre: "Fiction",
+...     publishedYear: 1960,
+...     chapters: ["When It Was a Game", "Atticus", "Tom Robinson"],
+...     publisher: "J.B. Lippincott & Co."
+...   },
+...   {
+...     title: "Harry Potter and the Sorcerer's Stone",
+...     author: "J.K. Rowling",
+...     genre: "Fantasy",
+...     publishedYear: 1997,
+...     chapters: ["The Boy Who Lived", "The Vanishing Glass", "The Letters from No One"],
+...     publisher: "Bloomsbury"
+...   },
+...   {
+...     title: "The Great Gatsby",
+...     author: "F. Scott Fitzgerald",
+...     genre: "Fiction",
+...     publishedYear: 1925,
+...     chapters: ["In My Younger and More Vulnerable Years", "The Party", "The New Wealth"],
+...     publisher: "Charles Scribner's Sons"
+...   }
+... ])
+
+// 1. FIND BOOKS PUBLISHED AFTER A CERTAIN YEAR 
+// db.Books.find({"publishedYear": {$gt: 1950}});
+ 
+// 2. FIND AUTHORS OF BRITISH NATIONALITY
+ //db.Authors.find({"nationality": "British"});
+ 
+ //3. UPDATE AN AUTHOR'S BIRTH YEAR
+ db.Authors.updateOne(
+...     {name: "Harper Lee"},
+...     {$set: {birthYear: 1927}} // Correcting to her actual birth year
+... );
+
+//4. INCREMENT PUBLISHED YEAR FOR ALL FANTASY BOOKS
+
+ db.Books.updateMany(
+...     {genre: "Fantasy"},
+...     {$inc: {publishedYear: 1}} // Incrementing by 1
+... );
+
+//5. UPSERT A NEW AUTHOR
+ db.Authors.updateOne(
+...     {name: "New Author"},
+...     {$set: {nationality: "Unknown", birthYear: 2023, booksWritten: []}},
+...     {upsert: true}
+... );
+
+//6. FIND BOOKS WITH TITLES CONTAINING "HARRY"
+ db.Books.find({"title": /Harry/});
+ 
+ //7. DELETE AUTHORS WHO HAVE NO BOOKS WRITTEN
+ db.Authors.deleteMany({"booksWritten": []});
+ 
+ //8. FIND DOCUMENT FOR "THE GREAT GATSBY" AND RETURN ONLY TITLE AND AUTHOR
+ db.Books.find(
+...     {title: "The Great Gatsby"},
+...     {title: 1, author: 1, _id: 0}
+... );
+
+//9. FIND AUTHORS WHO HAVE WRITTEN MORE THAN ONE BOOK
+ db.Authors.find({$where: "this.booksWritten.length > 1"});
+ 
+ //10.FIND ALL BOOKS IN FANTASY GENRE AND SORT BY PUBLISHED YEAR IN DESCENDING ORDER
+// db.Books.find({"genre": "Fantasy"}).sort({publishedYear: -1});
+
+// 11. FIND BOOKS BY EITHER J.K. ROWLING OR GEORGE ORWELL
+/* db.Books.find({
+...     $or: [
+...         {author: "J.K. Rowling"},
+...         {author: "George Orwell"}
+...     ]
+... }); */
+
+//12. FIND ALL FANTASY BOOKS THAT WERE PUBLISHED AFTER THE YEAR 2000.
+
+ /* db.Books.find({
+...     $and: [
+...         {publishedYear: {$gt: 2000}},
+...         {genre: "Fantasy"}
+...     ]
+... }); */
+
+// 13.Find all books where the genre is not "Fantasy" and the published year is greater than 1950.
+
+db.Books.find({
+  genre: { $ne: "Fantasy" },
+  publishedYear: { $gt: 1950 }
+})
+
+// 14.  Find all books where the published year is greater than or equal to 1960.
+
+db.Books.find({
+  publishedYear: { $gte: 1960 }
+})
+
+// 15.  Find all books where the published year is less than or equal to 1950.
+
+/* db.Books.find({
+  publishedYear: { $lte: 1950 }
+}) */
+
+//16.Find books where the publisher's location is "UK".
+
+db.Books.find({
+  "publisher.location": "UK"
+})
+
+// 17. Find books where the publisher's name is "J.B. Lippincott & Co."
+
+db.Books.find({
+  "publisher.name": "J.B. Lippincott & Co."
+})
+
+
+

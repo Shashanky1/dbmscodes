@@ -1,0 +1,80 @@
+-- Create Tables
+CREATE TABLE N_Empld (
+    emp_id INT,
+    emp_name VARCHAR(100),
+    emp_dept VARCHAR(50),
+    PRIMARY KEY (emp_id)
+);
+
+CREATE TABLE O_Empld (
+    emp_id INT,
+    emp_name VARCHAR(100),
+    emp_dept VARCHAR(50),
+    PRIMARY KEY (emp_id)
+);
+
+--  Populate N_Empld with Sample Data
+INSERT INTO N_Empld (emp_id, emp_name, emp_dept)
+VALUES
+    (1, 'Alice', 'HR'),
+    (2, 'Bob', 'IT'),
+    (3, 'Charlie', 'Finance');
+
+--  Populate O_Empld with Initial Data
+INSERT INTO O_Empld (emp_id, emp_name, emp_dept)
+VALUES
+    (1, 'Alice', 'HR'),  -- Same as in N_Empld, should be skipped
+    (4, 'David', 'Marketing');  -- Unique, won't match N_Empld
+
+SELECT * from N_Empld;
+SELECT * from O_Empld;
+
+--  Create the Stored Procedure with Parameterized Cursor
+DELIMITER //
+
+CREATE PROCEDURE MergeEmployees()
+BEGIN
+    DECLARE v_emp_id INT;
+    DECLARE v_emp_name VARCHAR(100);
+    DECLARE v_emp_dept VARCHAR(50);
+    DECLARE done INT DEFAULT 0;
+
+    -- Declare the cursor first
+    DECLARE cur CURSOR FOR SELECT emp_id, emp_name, emp_dept FROM N_Empld;
+
+    -- Declare a NOT FOUND handler after the cursor declaration
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    -- Open the cursor
+    OPEN cur;
+
+    read_loop: LOOP
+        -- Fetch each row's data into variables
+        FETCH cur INTO v_emp_id, v_emp_name, v_emp_dept;
+        
+        -- Exit loop if there are no more rows
+        IF done = 1 THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Check if the record exists in O_Empld
+        IF NOT EXISTS (SELECT 1 FROM O_Empld WHERE emp_id = v_emp_id) THEN
+            -- Insert record into O_Empld if it doesn't exist
+            INSERT INTO O_Empld (emp_id, emp_name, emp_dept)
+            VALUES (v_emp_id, v_emp_name, v_emp_dept);
+        END IF;
+    END LOOP;
+
+    -- Close the cursor
+    CLOSE cur;
+END //
+
+DELIMITER ;
+
+-- Execute the Stored Procedure
+CALL MergeEmployees();
+
+-- Verify the Results
+SELECT * FROM O_Empld;
+
+

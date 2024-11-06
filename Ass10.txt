@@ -1,0 +1,161 @@
+//Switch to libraryDB:
+use libraryDB
+
+//Create the Authors and Books collections:
+db.createCollection("Authors")
+db.createCollection("Books")
+
+//Insert data into Authors collection:
+db.Authors.insertMany([
+  {
+    name: "J.R.R. Tolkien",
+    nationality: "British",
+    birthYear: 1892,
+    booksWritten: ["The Hobbit", "The Lord of the Rings"]
+  },
+  {
+    name: "George Orwell",
+    nationality: "British",
+    birthYear: 1903,
+    booksWritten: ["1984", "Animal Farm"]
+  },
+  {
+    name: "Harper Lee",
+    nationality: "American",
+    birthYear: 1926,
+    booksWritten: ["To Kill a Mockingbird"]
+  },
+  {
+    name: "J.K. Rowling",
+    nationality: "British",
+    birthYear: 1965,
+    booksWritten: ["Harry Potter and the Sorcerer's Stone", "Harry Potter and the Chamber of Secrets"]
+  },
+  {
+    name: "F. Scott Fitzgerald",
+    nationality: "American",
+    birthYear: 1896,
+    booksWritten: ["The Great Gatsby"]
+  }
+])
+
+//Insert data into Books collection:
+db.Books.insertMany([
+  {
+    title: "The Hobbit",
+    author: "J.R.R. Tolkien",
+    genre: "Fantasy",
+    publishedYear: 1937,
+    chapters: ["An Unexpected Party", "Roast Mutton", "A Short Rest"],
+    publisher: "George Allen & Unwin"
+  },
+  {
+    title: "1984",
+    author: "George Orwell",
+    genre: "Dystopian",
+    publishedYear: 1949,
+    chapters: ["The Principles of Newspeak", "The Ministry of Truth", "Freedom is Slavery"],
+    publisher: "Secker & Warburg"
+  },
+  {
+    title: "To Kill a Mockingbird",
+    author: "Harper Lee",
+    genre: "Fiction",
+    publishedYear: 1960,
+    chapters: ["When It Was a Game", "Atticus", "Tom Robinson"],
+    publisher: "J.B. Lippincott & Co."
+  },
+  {
+    title: "Harry Potter and the Sorcerer's Stone",
+    author: "J.K. Rowling",
+    genre: "Fantasy",
+    publishedYear: 1997,
+    chapters: ["The Boy Who Lived", "The Vanishing Glass", "The Letters from No One"],
+    publisher: "Bloomsbury"
+  },
+  {
+    title: "The Great Gatsby",
+    author: "F. Scott Fitzgerald",
+    genre: "Fiction",
+    publishedYear: 1925,
+    chapters: ["In My Younger and More Vulnerable Years", "The Party", "The New Wealth"],
+    publisher: "Charles Scribner's Sons"
+  }
+])
+
+
+//Add Indexes for Optimized Query Performance
+db.Books.createIndex({ genre: 1 }) // Index on genre for faster genre-based searches
+db.Books.createIndex({ author: 1 }) // Index on author for author-based queries
+db.Books.createIndex({ publishedYear: -1 }) // Index on publishedYear for sorting by year
+
+// Implement Queries
+// Count the Total Number of Books
+db.Books.count()
+
+//Show Different Genres of Books
+db.Books.distinct("genre")
+
+//Show All Books Published After a Specific Year
+db.Books.aggregate([   { $match: { publishedYear: { $gt: 1900 } } } ])
+
+//Show Total Number of Books for Each Author
+/*db.Books.aggregate([
+  { $group: { _id: "$author", totalBooks: { $sum: 1 } } }
+])*/
+
+//Find the Book Containing a Specific Chapter
+db.Books.find({ chapters: "Roast Mutton" })
+
+//List All Chapters in Books of Genre "Fiction"
+db.Books.aggregate([
+  { $match: { genre: "Fiction" } },
+  { $project: { _id: 0, title: 1, chapters: 1 } }
+])
+
+//Count Total Number of Chapters Across All Books
+db.Books.aggregate([
+  { $unwind: "$chapters" },
+  { $group: { _id: null, totalChapters: { $sum: 1 } } }
+])
+
+//DISPLAY ALL BOOKS WITH THEIR PUBLISHER
+db.Books.aggregate([
+   { $project: { title: 1, publisher: 1 } }
+ ])
+ 
+ 
+//SORT BOOKS BASED ON PUBLISHED YEAR AND DISPLAY THE LATEST BOOKS
+db.Books.aggregate([
+   { $sort: { publishedYear: -1 } },
+   { $limit: 5 }
+ ])
+ 
+ 
+//  FIND BOOKS PUBLISHED BEFORE 1950 OR WRITTEN BY J.K. ROWLING
+db.Books.find({
+   $or: [
+     { publishedYear: { $lt: 1950 } },
+     { author: "J.K. Rowling" }
+   ]
+ })
+
+// FIND BOOKS THAT ARE EITHER FANTASY OR FICTION AND PUBLISHED AFTER 1950
+ db.Books.find({
+   $and: [
+     {
+       $or: [
+         { genre: "Fantasy" },
+         { genre: "Fiction" }
+       ]
+     },
+     { publishedYear: { $gt: 1950 } }
+   ]
+ })
+
+
+
+
+
+
+

@@ -1,0 +1,113 @@
+use salesDB
+
+db.createCollection("Sales")
+
+
+
+db.Sales.insertMany([
+  { product: "Laptop", quantity: 2, price: 1000 },
+  { product: "Smartphone", quantity: 5, price: 500 },
+  { product: "Tablet", quantity: 3, price: 300 },
+  { product: "Laptop", quantity: 1, price: 1000 },
+  { product: "Smartphone", quantity: 2, price: 500 },
+  { product: "Laptop", quantity: 4, price: 1000 }
+])
+
+//Map Function
+//The Map function calculates the total revenue for each sale and emits it with the product as the key
+var mapFunction = function() {
+  var revenue = this.quantity * this.price;
+  emit(this.product, revenue);
+}
+
+
+//Reduce Function
+//The Reduce function aggregates the total revenue for each product
+var reduceFunction = function(key, values) {
+  return Array.sum(values);
+}
+
+//Run the MapReduce Operation
+//Now, we’ll apply the MapReduce operation to our collection. The result will show the total sales revenue for each product.
+db.Sales.mapReduce(
+  mapFunction,
+  reduceFunction,
+  {
+    out: "TotalSalesRevenue" // The output collection name
+  }
+)
+
+// View the Results
+//After the MapReduce operation, the results will be stored in the TotalSalesRevenue collection. You can view the results using:
+db.TotalSalesRevenue.find().pretty()
+
+
+
+
+//Another example
+//Sample Data in the Employees Collection
+db.Employees.insertMany([
+  { name: "Alice", age: 25, department: "HR" },
+  { name: "Bob", age: 30, department: "HR" },
+  { name: "Charlie", age: 35, department: "Engineering" },
+  { name: "David", age: 28, department: "Engineering" },
+  { name: "Eve", age: 45, department: "Sales" },
+  { name: "Frank", age: 38, department: "Sales" },
+  { name: "Grace", age: 40, department: "Marketing" }
+]);
+
+//Map Function
+//This function emits the department as the key and the employee’s age as the value.
+var mapFunction = function() {
+  emit(this.department, { totalAge: this.age, count: 1 });
+};
+
+//Reduce Function
+//The reduce function aggregates the age and count for each department:
+var reduceFunction = function(key, values) {
+  var reducedValue = { totalAge: 0, count: 0 };
+
+  values.forEach(value => {
+    reducedValue.totalAge += value.totalAge;
+    reducedValue.count += value.count;
+  });
+
+  return reducedValue;
+};
+
+//Finalize Function
+//The finalize function calculates the average age for each department:
+var finalizeFunction = function(key, reducedValue) {
+  reducedValue.avgAge = reducedValue.totalAge / reducedValue.count;
+  return reducedValue;
+};
+
+//Run the MapReduce Operation
+//Now, we use the mapReduce command with the map, reduce, and finalize functions. The results will be stored in a collection called AverageAgeByDepartment
+db.Employees.mapReduce(
+  mapFunction,
+  reduceFunction,
+  {
+    out: "AverageAgeByDepartment",
+    finalize: finalizeFunction
+  }
+);
+
+//Queries to Analyze the Results
+//View Average Age by Department
+db.AverageAgeByDepartment.find().pretty()
+
+//Find Departments with Average Age Greater than a Specified Value
+db.AverageAgeByDepartment.find({ "value.avgAge": { $gt: 35 } })
+
+//Sort Departments by Average Age in Ascending Order
+db.AverageAgeByDepartment.find().sort({ "value.avgAge": 1 })
+
+//Retrieve Only Department Names and Average Ages
+db.AverageAgeByDepartment.find({}, { _id: 1, "value.avgAge": 1 })
+
+//Find Departments with More Than a Specified Number of Employees
+db.AverageAgeByDepartment.find({ "value.count": { $gt: 1 } })
+
+
+

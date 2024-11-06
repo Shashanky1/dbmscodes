@@ -1,0 +1,52 @@
+package assign_8;
+import java.util.*;
+import java.sql.*;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class jdbcdemo {
+   
+    public static void checkConnection() {
+        Connection con = null;
+        try {
+
+            Class.forName("com.mysql.jdbc.Driver");
+            con = DriverManager.getConnection("jdbc:mysql://10.10.13.97:3306/te31169_db", "te31169", "te31169");
+
+            if (con != null && !con.isClosed()) {
+                System.out.println("DATABASE CONNECTED");
+            }
+            else {
+                System.out.println("NOT CONNECTED");
+            }
+           
+            Statement smt = con.createStatement();
+            ResultSet rs = smt.executeQuery("select * from javaTable");
+            System.out.println("TABLE: ");
+            while(rs.next()) {
+              System.out.println(rs.getString(1)+" || "+rs.getInt(2));
+            }
+           
+//            smt.executeUpdate("create table javaTable (name varchar(100), rollNo int)");
+//            smt.executeUpdate("insert into javaTable values ('Parimal', 71)");
+//            smt.executeUpdate("insert into javaTable values ('Nirbhay', 70)");
+//            smt.executeUpdate("delete from javaTable where rollNo = 70");
+//            smt.executeUpdate("update javaTable set name='Pari' where rollNo = 71");
+           
+           
+            con.close();
+        }
+        catch (ClassNotFoundException e) {
+            System.out.println("MySQL Driver not found: " + e.getMessage());
+        }
+        catch (SQLException e) {
+            System.out.println("SQL Exception: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        checkConnection();
+    }
+}

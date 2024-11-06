@@ -1,0 +1,112 @@
+create table Library(Book_id int not null,Book_name varchar (30) not
+null,Book_Publisher varchar(30) not null);
+
+insert into Library values (1,"Anish","Batman");
+
+insert into Library values (2,"Bakula","Akshat");
+
+insert into Library values (3,"Man","Aman");
+
+insert into Library values (4,"Do It!","Naman");
+
+select * from Library;
+
+ create table Library_audit(Bid int,Bname varchar(30),Bpublish varchar(30));
+ 
+ desc Library_audit;
+ 
+ -- Trigger for before update
+ delimiter //
+ create trigger t1
+     before update on Library
+     for each row
+     begin
+     insert into Library_audit(Bid,Bname,Bpublish) values
+     (old.Book_id,old.Book_name,old.Book_Publisher);
+     end //
+
+
+ delimiter ;
+
+update Library set Book_name="Umbrella Man" where Book_id=3;
+select * from Library_audit;
+
+
+
+-- Trigger for before delete from Library
+delimiter //
+ create trigger t2
+     before delete on Library
+     for each row
+     begin
+     insert into Library_audit(Bid,Bname,Bpublish) values
+     (old.Book_id,old.Book_name,old.Book_Publisher);
+     end //
+
+
+ delimiter ;
+
+delete from Library where Book_id=4;
+select * from Library_audit;
+
+
+
+-- Trigger for before insert on Library
+delimiter //
+ create trigger t3
+     before insert on Library
+     for each row 
+     begin
+     insert into Library_audit (Bid,Bname,Bpublish) values (6,"Dead","Akash");
+     end //
+     
+delimiter ;
+
+-- Trigger for after insert on Library
+delimiter //
+CREATE TRIGGER after_insert_library
+     AFTER INSERT ON Library
+     FOR EACH ROW
+     BEGIN
+     INSERT INTO Library_audit(Bid, Bname, Bpublish) VALUES (NEW.Book_id, NEW.Book_name, NEW.Book_Publisher);
+     END //
+
+delimiter ;
+
+insert into Library values (7,"Ani","Batman");
+select * from Library_audit;
+
+
+-- Trigger for after update on Library
+delimiter //
+CREATE TRIGGER after_update_library
+     AFTER UPDATE ON Library
+     FOR EACH ROW
+     BEGIN
+         INSERT INTO Library_audit(Bid, Bname, Bpublish) VALUES (NEW.Book_id, NEW.Book_name, NEW.Book_Publisher);
+     END //
+
+delimiter ;
+ 
+
+--  Trigger for after delete on Library
+delimiter //
+CREATE TRIGGER after_delete_library
+     AFTER DELETE ON Library
+     FOR EACH ROW
+     BEGIN
+         INSERT INTO Library_audit(Bid, Bname, Bpublish) VALUES (OLD.Book_id, OLD.Book_name, OLD.Book_Publisher);
+     END //
+    
+delimiter ;
+
+DELETE FROM Library WHERE Book_id = 2;
+select * from Library_audit;
+
+-- Running update trigger
+UPDATE Library SET Book_name = 'New Harry Potter' WHERE Book_id = 1;
+select * from Library_audit;
+
+
+
+

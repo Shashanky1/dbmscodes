@@ -1,0 +1,145 @@
+ -- Create Tables with Constraints
+ CREATE TABLE Dept (
+    Dept_id INT PRIMARY KEY,
+    Dept_name VARCHAR(50) NOT NULL,
+    location VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Employee (
+    Emp_id INT PRIMARY KEY,
+    Dept_id INT,
+    Emp_fname VARCHAR(50) NOT NULL,
+    Emp_lname VARCHAR(50) NOT NULL,
+    Emp_position VARCHAR(50),
+    Emp_salary DECIMAL(10, 2),
+    Emp_JoinDate DATE,
+    FOREIGN KEY (Dept_id) REFERENCES Dept(Dept_id) ON DELETE CASCADE
+);
+
+CREATE TABLE Project (
+    Proj_id INT PRIMARY KEY,
+    Dept_id INT,
+    Proj_Name VARCHAR(50) NOT NULL,
+    Proj_Location VARCHAR(50),
+    Proj_cost DECIMAL(12, 2),
+    Proj_year INT,
+    FOREIGN KEY (Dept_id) REFERENCES Dept(Dept_id) ON DELETE CASCADE
+);
+
+INSERT INTO Dept (Dept_id, Dept_name, location) VALUES
+(1, 'Computer', 'New York'),
+(2, 'IT', 'Chicago'),
+(3, 'HR', 'Mumbai'),
+(4, 'Finance', 'Pune');
+
+INSERT INTO Employee (Emp_id, Dept_id, Emp_fname, Emp_lname, Emp_position, Emp_salary, Emp_JoinDate) VALUES
+(101, 1, 'Peter', 'Harris', 'Manager', 75000, '1983-06-15'),
+(102, 1, 'Paul', 'Smith', 'Analyst', 55000, '1990-08-12'),
+(103, 2, 'Hannah', 'Brown', 'Developer', 60000, '2010-03-25'),
+(104, 3, 'Mike', 'Jones', 'HR Specialist', 50000, '2005-05-30'),
+(105, 3, 'Eva', 'Davis', 'HR Assistant', 40000, '2018-07-19'),
+(106, 4, 'Sam', 'Wilson', 'Accountant', 65000, '2011-11-11'),
+(107, 2, 'Chris', 'Lee', 'Senior Developer', 70000, '2014-09-17'),
+(108, 1, 'Patricia', 'Clark', 'Support', 45000, '2021-12-04'),
+(109, 4, 'Lucy', 'Lopez', 'Financial Analyst', 68000, '2022-04-22'),
+(110, 1, 'Harry', 'White', 'Intern', 30000, '2023-01-15');
+
+
+INSERT INTO Project (Proj_id, Dept_id, Proj_Name, Proj_Location, Proj_cost, Proj_year) VALUES
+(201, 1, 'Project Alpha', 'New York', 120000, 2015),
+(202, 1, 'Project Beta', 'Chicago', 250000, 2020),
+(203, 2, 'Project Gamma', 'Hyderabad', 180000, 2017),
+(204, 3, 'Project Delta', 'Mumbai', 210000, 2015),
+(205, 4, 'Project Epsilon', 'Pune', 330000, 2022),
+(206, 2, 'Project Zeta', 'Pune', 90000, 2009),
+(207, 3, 'Project Eta', 'Mumbai', 140000, 2018),
+(208, 4, 'Project Theta', 'Hyderabad', 370000, 2007),
+(209, 1, 'Project Iota', 'New York', 500000, 2015),
+(210, 2, 'Project Kappa', 'Pune', 450000, 2005);
+
+
+-- Execute SQL Queries (JOINs, Sub-queries, and View Manipulation)
+-- Find Employee and Department details using NATURAL JOIN.
+SELECT * 
+FROM Employee 
+NATURAL JOIN Dept;
+
+-- Find emp_fname, Emp_position, location, and Emp_JoinDate for employees who have the same Dept_id.
+SELECT e.Emp_fname, e.Emp_position, d.location, e.Emp_JoinDate 
+FROM Employee e
+JOIN Dept d ON e.Dept_id = d.Dept_id;
+
+-- Find Employee details, Proj_id, and Project cost for employees whose project location is not 'Hyderabad'.
+SELECT e.Emp_id, e.Emp_fname, e.Emp_lname, p.Proj_id, p.Proj_cost 
+FROM Employee e
+JOIN Project p ON e.Dept_id = p.Dept_id
+WHERE p.Proj_Location <> 'Hyderabad';
+
+-- Find Department name, Employee name, and Employee position for projects that started in the year 2020.
+SELECT d.Dept_name, e.Emp_fname, e.Emp_position 
+FROM Employee e
+JOIN Dept d ON e.Dept_id = d.Dept_id
+JOIN Project p ON d.Dept_id = p.Dept_id
+WHERE p.Proj_year = 2020;
+
+-- Display emp_position and Dept_name for employees associated with projects costing more than 30000.
+SELECT e.Emp_position, d.Dept_name 
+FROM Employee e
+JOIN Dept d ON e.Dept_id = d.Dept_id
+JOIN Project p ON d.Dept_id = p.Dept_id
+WHERE p.Proj_cost > 30000;
+
+-- Find the names of all the Projects that started in the year 2015.
+SELECT Proj_Name 
+FROM Project 
+WHERE Proj_year = 2015;
+
+-- List the Department names where the number of employees (no_of_emp) is 10.
+SELECT d.Dept_name 
+FROM Dept d
+JOIN Employee e ON d.Dept_id = e.Dept_id
+GROUP BY d.Dept_id
+HAVING COUNT(e.Emp_id) = 10;
+
+-- Display the total number of employees who joined any project before 2009.
+SELECT COUNT(DISTINCT e.Emp_id) AS Total_Employees
+FROM Employee e
+JOIN Project p ON e.Dept_id = p.Dept_id
+WHERE p.Proj_year < 2009;
+
+-- reate a view showing Employee and Department details.
+CREATE VIEW EmpDeptView AS
+SELECT e.Emp_id, e.Emp_fname, e.Emp_lname, e.Emp_position, d.Dept_name, d.location
+FROM Employee e
+JOIN Dept d ON e.Dept_id = d.Dept_id;
+
+-- Perform Manipulations on the View: Insert, Update, Delete, Drop View.
+-- Insert into the view (for simple views only; otherwise, insert directly into the base tables).
+/* INSERT INTO EmpDeptView (Emp_id, Emp_fname, Emp_lname, Emp_position, Dept_name, location)
+VALUES (111, 'Jane', 'Doe', 'Analyst', 'IT', 'Chicago'); */
+
+-- Update a record in the view
+UPDATE EmpDeptView 
+SET Emp_position = 'Senior Analyst' 
+WHERE Emp_id = 111;
+
+-- Delete a record from the view
+-- DELETE FROM EmpDeptView 
+-- WHERE Emp_id = 111;
+
+-- Drop the view
+DROP VIEW EmpDeptView;
+
+
+
+
+
+
+
+
+
+
+
+
+
+

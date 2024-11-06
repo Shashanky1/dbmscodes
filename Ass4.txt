@@ -1,0 +1,99 @@
+CREATE TABLE Borrower (
+    roll_no INT,
+    name VARCHAR(100),
+    date_of_issue DATE,
+    book_name VARCHAR(100),
+    status CHAR(1)
+);
+
+CREATE TABLE Fine (
+    roll_no INT,
+    fine_date DATE,
+    amount DECIMAL(10, 2)
+);
+
+-- Sample Data
+INSERT INTO Borrower (roll_no, name, date_of_issue, book_name, status) 
+VALUES (1, 'Alice', '2023-10-01', 'Database Systems', '1');
+
+select * from Borrower;
+
+-- SQL Stored Procedure Code
+DELIMITER //
+
+CREATE PROCEDURE CalculateFine(IN p_roll_no INT, IN p_book_name VARCHAR(100))
+BEGIN
+    DECLARE v_date_of_issue DATE;
+    DECLARE v_status CHAR(1);
+    DECLARE v_days INT;
+    DECLARE v_fine_amount DECIMAL(10, 2) DEFAULT 0;
+    DECLARE v_current_date DATE DEFAULT CURDATE();
+
+    -- Error handler for general SQL errors
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        SELECT 'An error occurred while processing the fine calculation.' AS Error_Message;
+    END;
+
+    -- Retrieve the date of issue and status of the book
+    BEGIN
+        DECLARE CONTINUE HANDLER FOR NOT FOUND
+        BEGIN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No matching book record found for the given roll number.';
+        END;
+
+        SELECT date_of_issue, status
+        INTO v_date_of_issue, v_status
+        FROM Borrower 
+        WHERE roll_no = p_roll_no AND book_name = p_book_name;
+    END;
+
+    -- Check if the book is already returned
+    IF v_status = 'R' THEN
+        SELECT 'The book is already returned.' AS Message;
+    ELSE
+        -- Calculate days since the date of issue
+        SET v_days = DATEDIFF(v_current_date, v_date_of_issue);
+
+        -- Calculate the fine amount based on days overdue
+        IF v_days > 15 AND v_days <= 30 THEN
+            SET v_fine_amount = (v_days - 15) * 5;
+        ELSEIF v_days > 30 THEN
+            SET v_fine_amount = (15 * 5) + ((v_days - 30) * 50);
+        END IF;
+
+        -- Check for duplicate entries in Fine table for this roll_no on this fine_date
+        IF EXISTS (SELECT 1 FROM Fine WHERE roll_no = p_roll_no AND fine_date = v_current_date) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Duplicate entry for fine on this date. Fine already recorded for today.';
+        END IF;
+
+        -- Insert fine details into the Fine table if applicable
+        IF v_fine_amount > 0 THEN
+            INSERT INTO Fine (roll_no, fine_date, amount)
+            VALUES (p_roll_no, v_current_date, v_fine_amount);
+        END IF;
+
+        -- Update book status to 'R' for returned
+        UPDATE Borrower 
+        SET status = 'R' 
+        WHERE roll_no = p_roll_no AND book_name = p_book_name;
+
+        -- Output result message
+        SELECT 'Book returned successfully, fine processed if applicable.' AS Message;
+    END IF;
+
+END //
+
+DELIMITER ;
+
+-- Call the Stored Procedure:
+CALL CalculateFine(1, 'Database Systems');
+
+-- Check Results:
+SELECT * FROM Fine;
+SELECT * FROM Borrower;
+
+
+
+
+

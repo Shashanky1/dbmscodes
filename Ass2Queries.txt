@@ -1,0 +1,130 @@
+-- Create Dept Table
+CREATE TABLE Dept (
+    Dept_id INT PRIMARY KEY AUTO_INCREMENT,
+    Dept_name VARCHAR(50) NOT NULL,
+    Dept_location VARCHAR(50) NOT NULL
+);
+
+-- Create Employee Table
+CREATE TABLE Employee (
+    Emp_id INT PRIMARY KEY AUTO_INCREMENT,
+    Dept_id INT,
+    Emp_fname VARCHAR(50) NOT NULL,
+    Emp_lname VARCHAR(50) NOT NULL,
+    Emp_Position VARCHAR(50),
+    Emp_salary DECIMAL(10, 2),
+    Emp_JoinDate DATE,
+    FOREIGN KEY (Dept_id) REFERENCES Dept(Dept_id) ON DELETE CASCADE
+);
+
+-- Create Project Table
+CREATE TABLE Project (
+    Proj_id INT PRIMARY KEY AUTO_INCREMENT,
+    Dept_id INT,
+    Proj_Name VARCHAR(50) NOT NULL,
+    Proj_Location VARCHAR(50) NOT NULL,
+    Proj_cost DECIMAL(10, 2),
+    Proj_year INT,
+    FOREIGN KEY (Dept_id) REFERENCES Dept(Dept_id) ON DELETE CASCADE
+);
+
+
+-- Create View, Index, Sequence, and Synonym
+CREATE VIEW EmployeeView AS
+SELECT Emp_id, Emp_fname, Emp_lname, Emp_Position, Emp_salary
+FROM Employee;
+
+-- Create an index on Emp_Position in Employee Table
+CREATE INDEX idx_emp_position ON Employee(Emp_Position);
+
+-- Create a sequence for generating unique Employee IDs
+CREATE SEQUENCE emp_id_seq
+START WITH 1
+INCREMENT BY 1;
+
+-- Synonyms are not supported directly in MySQL. Instead, use a VIEW to mimic synonym behavior.
+
+
+-- Insert Records
+-- Insert Departments
+INSERT INTO Dept (Dept_name, Dept_location) VALUES
+('Computer', 'New York'),
+('IT', 'San Francisco'),
+('HR', 'Mumbai'),
+('Finance', 'Pune'),
+('Marketing', 'Delhi');
+
+-- Insert Employees
+INSERT INTO Employee (Dept_id, Emp_fname, Emp_lname, Emp_Position, Emp_salary, Emp_JoinDate) VALUES
+(1, 'Paul', 'Smith', 'Developer', 60000.00, '1984-05-21'),
+(1, 'Hannah', 'Brown', 'Analyst', 65000.00, '1983-06-10'),
+(2, 'Perry', 'Johnson', 'Manager', 70000.00, '1982-07-15'),
+(2, 'Alice', 'Davis', 'Developer', 60000.00, '1990-08-20'),
+(3, 'Zara', 'Wilson', 'HR Manager', 58000.00, '1988-09-22'),
+(4, 'Olivia', 'Garcia', 'Finance Analyst', 62000.00, '1985-10-30'),
+(5, 'Nora', 'Martinez', 'Sales Executive', 55000.00, '1995-11-05'),
+(1, 'Peter', 'Taylor', 'Developer', 65000.00, '1980-12-12'),
+(2, 'Heidi', 'Hernandez', 'Tech Lead', 70000.00, '1979-01-01'),
+(3, 'David', 'Lopez', 'Recruiter', 60000.00, '1991-02-19');
+
+-- Insert Projects
+INSERT INTO Project (Dept_id, Proj_Name, Proj_Location, Proj_cost, Proj_year) VALUES
+(1, 'Project Alpha', 'New York', 250000.00, 2022),
+(1, 'Project Beta', 'Los Angeles', 350000.00, 2023),
+(2, 'Project Gamma', 'San Francisco', 450000.00, 2024),
+(3, 'Project Delta', 'Mumbai', 150000.00, 2021),
+(4, 'Project Epsilon', 'Pune', 300000.00, 2022),
+(5, 'Project Zeta', 'Delhi', 400000.00, 2023);
+
+
+-- Execute Queries
+
+-- Display all Employee details with Department ‘Computer’ and ‘IT’ and Employee first name starting with 'p' or 'h'.
+SELECT e.*, d.Dept_name
+FROM Employee e
+JOIN Dept d ON e.Dept_id = d.Dept_id
+WHERE d.Dept_name IN ('Computer', 'IT') 
+AND (e.Emp_fname LIKE 'p%' OR e.Emp_fname LIKE 'h%');
+
+-- List the number of different Employee Positions
+SELECT COUNT(DISTINCT Emp_Position) AS Num_Different_Positions
+FROM Employee;
+
+-- Give a 10% increase in Salary of Employees whose joining year is before 1985.
+UPDATE Employee
+SET Emp_salary = Emp_salary * 1.10
+WHERE YEAR(Emp_JoinDate) < 1985;
+
+-- Delete Department details which location is ‘Mumbai’.
+DELETE FROM Dept
+WHERE Dept_location = 'Mumbai';
+
+select * from Dept;
+
+-- Find the names of Projects with location ‘Pune’.
+SELECT Proj_Name
+FROM Project
+WHERE Proj_Location = 'Pune';
+
+-- Find the projects having cost between 100000 and 500000.
+SELECT *
+FROM Project
+WHERE Proj_cost BETWEEN 100000 AND 500000;
+
+-- Find the project having maximum price and find the average of Project cost.
+SELECT Proj_id, Proj_Name, Proj_cost
+FROM Project
+WHERE Proj_cost = (SELECT MAX(Proj_cost) FROM Project);
+
+SELECT AVG(Proj_cost) AS Average_Project_Cost
+FROM Project;
+
+-- Display all employees with Emp_id and Emp name in decreasing order of Emp_lname.
+SELECT Emp_id, CONCAT(Emp_fname, ' ', Emp_lname) AS Emp_Name
+FROM Employee
+ORDER BY Emp_lname DESC;
+
+-- Display Proj_name, Proj_location, Proj_cost of all projects started in 2004, 2005, 2007.
+SELECT Proj_Name, Proj_Location, Proj_cost
+FROM Project
+WHERE Proj_year IN (2004, 2005, 2007);
